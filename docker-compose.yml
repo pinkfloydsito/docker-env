@@ -1,24 +1,37 @@
-initializer:
-  image: alpine:3.18
-  volumes:
-    - env-data:/env
-  command: /scripts/generate_env.sh
-  healthcheck:
-    test: ["CMD", "test", "-f", "/env/myenvfile"]
-    interval: 5s
-    timeout: 2s
-    retries: 3
+version: '3.7'
 
-service1:
-  image: alpine:3.18
-  volumes:
-    - env-data:/env
-  entrypoint: /scripts/source_and_run.sh
-  command: ["wait-for-it.sh", "initializer", "/app/start_service1.sh"]
+services:
+  initializer:
+    build:
+      context: ./initializer
+      dockerfile: Dockerfile
+    volumes:
+      - env-data:/env
+    command: /scripts/generate_env.sh
+    healthcheck:
+      test: ["CMD", "test", "-f", "/env/myenvfile"]
+      interval: 5s
+      timeout: 2s
+      retries: 3
 
-service2:
-  image: alpine:3.18
-  volumes:
-    - env-data:/env
-  entrypoint: /scripts/source_and_run.sh
-  command: ["wait-for-it.sh", "initializer", "/app/start_service2.sh"]
+  service1:
+    build:
+      context: ./service1
+      dockerfile: Dockerfile
+    volumes:
+      - env-data:/env
+    entrypoint: ["/scripts/wait-for-it.sh", "initializer:8000", "--"]
+    command: ["/app/start_service.sh"]
+
+  service2:
+    build:
+      context: ./service1
+      dockerfile: Dockerfile
+    volumes:
+      - env-data:/env
+    entrypoint: ["/scripts/wait-for-it.sh", "initializer:8000", "--"]
+    command: ["/app/start_service.sh"]
+
+volumes:
+  env-data:
+

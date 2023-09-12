@@ -1,4 +1,4 @@
-FROM alpine:3.18.3
+FROM python:3.9-slim
 
 COPY ./scripts/generate_env.sh /scripts/generate_env.sh
 
