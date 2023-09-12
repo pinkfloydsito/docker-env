@@ -1,0 +1,24 @@
+initializer:
+  image: alpine:3.18
+  volumes:
+    - env-data:/env
+  command: /scripts/generate_env.sh
+  healthcheck:
+    test: ["CMD", "test", "-f", "/env/myenvfile"]
+    interval: 5s
+    timeout: 2s
+    retries: 3
+
+service1:
+  image: alpine:3.18
+  volumes:
+    - env-data:/env
+  entrypoint: /scripts/source_and_run.sh
+  command: ["wait-for-it.sh", "initializer", "/app/start_service1.sh"]
+
+service2:
+  image: alpine:3.18
+  volumes:
+    - env-data:/env
+  entrypoint: /scripts/source_and_run.sh
+  command: ["wait-for-it.sh", "initializer", "/app/start_service2.sh"]
